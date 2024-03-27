@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"apirest/models"
+	"apirest-gorm/models"
 	"database/sql"
 	"log"
 
@@ -13,7 +13,6 @@ var db *sql.DB
 func Init(connection *sql.DB) {
 	db = connection
 }
-
 
 // Obtener todo el registro
 func GetAllUsers() models.Users {
@@ -29,7 +28,7 @@ func GetAllUsers() models.Users {
 	return users
 }
 
-//Obtener un Registro
+// Obtener un Registro
 func GetOneUser(id int) *models.User {
 	user := models.NewUser("", "", "")
 	sql := "SELECT id, username, password, email FROM users WHERE id=?"
@@ -39,7 +38,6 @@ func GetOneUser(id int) *models.User {
 	}
 	return user
 }
-
 
 // func GetOneUser(id int) {
 // 	query := "select * from contact where id = ?"

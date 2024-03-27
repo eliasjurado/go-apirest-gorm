@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"apirest/models"
+	"apirest-gorm/models"
 	"database/sql"
 	"log"
 )

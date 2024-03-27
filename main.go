@@ -1,9 +1,9 @@
 package main
 
 import (
-	"apirest/database"
-	"apirest/handlers"
-	"apirest/repository"
+	"apirest-gorm/database"
+	"apirest-gorm/handlers"
+	"apirest-gorm/repository"
 	"log"
 	"net/http"
 

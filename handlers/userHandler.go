@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"apirest/database"
-	"apirest/models"
-	"apirest/repository"
+	"apirest-gorm/database"
+	"apirest-gorm/models"
+	"apirest-gorm/repository"
 	"encoding/json"
 	"fmt"
 	"net/http"
