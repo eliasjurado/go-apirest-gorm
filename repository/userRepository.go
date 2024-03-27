@@ -39,39 +39,6 @@ func GetOneUser(id int) *models.User {
 	return user
 }
 
-// func GetOneUser(id int) {
-// 	query := "select * from contact where id = ?"
-// 	row := db.QueryRow(query, id)
-
-// 	c := models.Contact{}
-
-// 	log.Printf("%v\n", "Lista de Contacto")
-// 	log.Printf("%v\n", "------------------")
-// 	var valueEmail sql.NullString
-// 	var valuePhone sql.NullString
-// 	err := row.Scan(&c.Id, &c.Name, &valueEmail, &valuePhone)
-
-// 	if valueEmail.Valid {
-// 		c.Email = valueEmail.String
-// 	} else {
-// 		c.Email = ""
-// 	}
-
-// 	if valuePhone.Valid {
-// 		c.Phone = valuePhone.String
-// 	} else {
-// 		c.Phone = ""
-// 	}
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			log.Fatalf("No se encontró ningún contacto con el ID %d", id)
-// 		}
-// 	}
-
-// 	log.Printf("ID: %v, Name: %v, Email: %v, Phone: %v\n", c.Id, c.Name, c.Email, c.Phone)
-// 	log.Printf("%v\n", "------------------")
-// }
-
 func CreateUser(c models.Contact) {
 	query := "insert into contact (name, email, phone) values(?,?,?)"
 
