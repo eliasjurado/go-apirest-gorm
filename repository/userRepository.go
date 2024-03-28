@@ -1,70 +1,46 @@
 package repository
 
 import (
+	"apirest-gorm/database"
 	"apirest-gorm/models"
-	"database/sql"
-	"log"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
-
-func Init(connection *sql.DB) {
-	db = connection
-}
-
-// Obtener todo el registro
-func GetAllUsers() models.Users {
-	sql := "SELECT id, username, password, email FROM users"
+func GetAllUsers() (models.Users, error) {
 	users := models.Users{}
-	rows, _ := db.Query(sql)
 
-	for rows.Next() {
-		user := models.User{}
-		rows.Scan(&user.Id, &user.Username, &user.Password, &user.Email)
-		users = append(users, user)
-	}
-	return users
-}
-
-// Obtener un Registro
-func GetOneUser(id int) *models.User {
-	user := models.NewUser("", "", "")
-	sql := "SELECT id, username, password, email FROM users WHERE id=?"
-	rows, _ := db.Query(sql, id)
-	for rows.Next() {
-		rows.Scan(&user.Id, &user.Username, &user.Password, &user.Email)
-	}
-	return user
-}
-
-func CreateUser(c models.Contact) {
-	query := "insert into contact (name, email, phone) values(?,?,?)"
-
-	_, err := db.Exec(query, c.Name, c.Email, c.Phone)
+	db, err := database.Connect()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	log.Printf("%s\n", "Nuevo contacto registrado con éxito")
+	db.Find(&users)
+	return users, nil
 }
 
-func UpdateUser(c models.Contact) {
-	query := "update contact set name =?, email=?, phone=? where id=?"
+func GetOneUser(id int64) (*models.User, error) {
+	user := &models.User{}
 
-	_, err := db.Exec(query, c.Name, c.Email, c.Phone, c.Id)
+	db, err := database.Connect()
 	if err != nil {
-		log.Fatal(err)
+		return user, err
 	}
-	log.Printf("%s\n", "Contacto actualizado con éxito")
+	db.Find(&user)
+	return user, nil
 }
 
-func DeleteUser(id int) {
-	query := "delete from contact where id=?"
-
-	_, err := db.Exec(query, id)
+func SaveUser(user *models.User) (*models.User, error) {
+	db, err := database.Connect()
 	if err != nil {
-		log.Fatal(err)
+		return user, err
 	}
-	log.Printf("%s\n", "Contacto eliminado con éxito")
+	db.Save(&user)
+	return user, nil
+}
+
+func RemoveUser(user *models.User) error {
+	db, err := database.Connect()
+	if err != nil {
+		return err
+	}
+	db.Delete(&user)
+	return nil
 }

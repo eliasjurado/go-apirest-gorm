@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"apirest-gorm/database"
 	"apirest-gorm/models"
 	"apirest-gorm/repository"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -13,89 +11,139 @@ import (
 )
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	
+
+	res := models.Response{}
 	format := r.Header.Get("x-format")
 
-	database.Connect()
-	users := repository.GetAllUsers()
-	models.SendData(w, users, format)
+	users, err := repository.GetAllUsers()
+	if err != nil {
+		res.Status = http.StatusInternalServerError
+		Send(w, res, format)
+		return
+	}
+
+	res.Data = users
+	res.Status = http.StatusOK
+	Send(w, res, format)
 }
 
 func GetOneUser(w http.ResponseWriter, r *http.Request) {
-
+	res := models.Response{}
 	vars := mux.Vars(r)
 	format := r.Header.Get("x-format")
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		models.SendNotProcesableEntity(w, format)
+		res.Status = http.StatusUnprocessableEntity
+		Send(w, res, format)
 		return
 	}
 
-	database.Connect()
-	user := repository.GetOneUser(id)
-	if user.Id == 0 {
-		models.SendNotFound(w, format)
+	user, err := repository.GetOneUser(int64(id))
+	if err != nil || user.Id != int64(id) {
+		res.Status = http.StatusNotFound
+		Send(w, res, format)
 		return
 	}
 
-	models.SendData(w, user, format)
-
+	res.Data = user
+	res.Status = http.StatusOK
+	Send(w, res, format)
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	user := models.User{}
+	res := models.Response{}
+	format := r.Header.Get("x-format")
+	user := &models.User{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&user)
 	if err != nil {
-		fmt.Fprintln(w, http.StatusUnprocessableEntity)
+		res.Status = http.StatusUnprocessableEntity
+		Send(w, res, format)
 		return
 	}
-	database.Connect()
-	user.Save(database.DB)
-	database.Connect()
-	output, _ := json.Marshal(user)
-	fmt.Fprintln(w, string(output))
+	user.Id = 0
+	user, err = repository.SaveUser(user)
+	if err != nil {
+		res.Status = http.StatusInternalServerError
+		Send(w, res, format)
+		return
+	}
+
+	res.Data = user
+	res.Status = http.StatusCreated
+	Send(w, res, format)
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 
+	res := models.Response{}
 	vars := mux.Vars(r)
+	format := r.Header.Get("x-format")
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		fmt.Fprintln(w, http.StatusUnprocessableEntity)
+		res.Status = http.StatusUnprocessableEntity
+		Send(w, res, format)
 		return
 	}
 
-	user := models.User{}
+	dbUser, err := repository.GetOneUser(int64(id))
+	if err != nil || dbUser.Id != int64(id) {
+		res.Status = http.StatusNotFound
+		Send(w, res, format)
+		return
+	}
+
+	user := &models.User{}
 	decoder := json.NewDecoder(r.Body)
 	err = decoder.Decode(&user)
 	if err != nil {
-		fmt.Fprintln(w, http.StatusUnprocessableEntity)
+		res.Status = http.StatusUnprocessableEntity
+		Send(w, res, format)
 		return
 	}
 
-	user.Id = int64(id)
-	database.Connect()
-	user.Save(database.DB)
-	database.Connect()
-	output, _ := json.Marshal(user)
-	fmt.Fprintln(w, string(output))
+	dbUser.Username = user.Username
+	dbUser.Password = user.Password
+	dbUser.Email = user.Email
+
+	user, err = repository.SaveUser(dbUser)
+	if err != nil {
+		res.Status = http.StatusInternalServerError
+		Send(w, res, format)
+		return
+	}
+
+	res.Data = user
+	res.Status = http.StatusCreated
+	Send(w, res, format)
 }
 
 func RemoveUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	res := models.Response{}
 	vars := mux.Vars(r)
+	format := r.Header.Get("x-format")
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		fmt.Fprintln(w, http.StatusUnprocessableEntity)
+		res.Status = http.StatusUnprocessableEntity
+		Send(w, res, format)
 		return
 	}
-	database.Connect()
-	user, _ := models.GetUser(database.DB, id)
-	user.Delete(database.DB)
-	database.Close()
-	output, _ := json.Marshal(user)
-	fmt.Fprintln(w, string(output))
+
+	user, err := repository.GetOneUser(int64(id))
+	if err != nil || user.Id != int64(id) {
+		res.Status = http.StatusNotFound
+		Send(w, res, format)
+		return
+	}
+
+	err = repository.RemoveUser(user)
+	if err != nil {
+		res.Status = http.StatusInternalServerError
+		Send(w, res, format)
+		return
+	}
+
+	res.Data = user
+	res.Status = http.StatusOK
+	Send(w, res, format)
 }

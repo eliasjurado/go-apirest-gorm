@@ -1,53 +1,31 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-// Guarda la conexion
-var DB *sql.DB
-
-func Connect() {
+func Connect() (*gorm.DB, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	dns := fmt.Sprintf("%v:%v@(%v:%v)/%v",
+	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8mb4&parseTime=True&loc=Local",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NAME"))
-
-	//Abrir conexión a la database
-	connection, err := sql.Open("mysql", dns)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Printf("%+v\n", err)
+		return nil, err
 	}
-	DB = connection
-
-	//Verificar conexión a la db
-	Ping()
-
-	log.Printf("%+v\n", "conexion exitosa")
-	
-}
-
-// Verificar la conexion
-func Ping() {
-	if err := DB.Ping(); err != nil {
-		log.Fatal(err.Error())
-	}
-}
-
-// Cerrar la Conexion
-func Close() {
-	DB.Close()
+	log.Printf("%+v\n", "Conexión exitosa")
+	return db, nil
 }
